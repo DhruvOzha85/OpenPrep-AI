@@ -7,6 +7,23 @@ body:
     attributes:
       value: |
         We love new ideas! Share your feature request below.
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: Affected Areas
+      description: Select one or more areas that this feature suggestion affects.
+      options:
+        - label: Frontend
+        - label: Backend
+        - label: Database
+        - label: AI
+        - label: Authentication
+        - label: PYQ Analysis
+        - label: Study Planner
+        - label: Dashboard
+        - label: UI/UX
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
