@@ -98,6 +98,30 @@ describe('Auth Controller - Integration Tests', () => {
 
       expect(res.status).toBe(400);
     });
+
+    it('should return 400 if name is empty', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ name: '', email: 'test@example.com', password: '123456' });
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 if email is invalid', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ name: 'Test User', email: 'notanemail', password: '123456' });
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 if password is too short', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ name: 'Test User', email: 'test@example.com', password: '123' });
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
   });
 
   describe('POST /api/auth/login', () => {
