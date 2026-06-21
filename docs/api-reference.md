@@ -13,40 +13,37 @@ This document catalogs the REST API endpoints available in the **OpenPrep AI** b
 ### 1. Register User
 * **Method**: `POST`
 * **Path**: `/auth/register`
+* **Rate Limit**: 5 requests per hour per IP
+* **Password Requirements**: Minimum 8 characters, must contain uppercase, lowercase, number, and special character
 * **Request Body**:
 ```json
 {
   "name": "Jane Doe",
   "email": "jane@example.com",
-  "password": "strongpassword123",
+  "password": "Str0ng!Pass",
   "role": "student"
 }
 ```
-* **Success Response (201 Created)**:
+* **Success Response (201 Created)** — No JWT returned; user must verify email first:
 ```json
 {
   "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "60d0fe4f5311236168a109a1",
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "role": "student",
-    "streak": { "count": 0 }
-  }
+  "message": "Registration successful. Please verify your email. Verification link sent to jane@example.com (expires in 24 hours).",
+  "isEmailVerified": false
+}
+```
+* **Error Response (400)** — Duplicate email:
+```json
+{
+  "success": false,
+  "error": "User already exists"
 }
 ```
 
-### 2. Login User
+### 2. Verify Email
 * **Method**: `POST`
-* **Path**: `/auth/login`
-* **Request Body**:
-```json
-{
-  "email": "jane@example.com",
-  "password": "strongpassword123"
-}
-```
+* **Path**: `/auth/verify-email/:token`
+* **Rate Limit**: 5 requests per hour per IP
 * **Success Response (200 OK)**:
 ```json
 {
@@ -57,12 +54,111 @@ This document catalogs the REST API endpoints available in the **OpenPrep AI** b
     "name": "Jane Doe",
     "email": "jane@example.com",
     "role": "student",
+    "isEmailVerified": true,
+    "streak": { "count": 0 }
+  }
+}
+```
+* **Error Response (400)** — Invalid / expired token:
+```json
+{
+  "success": false,
+  "error": "Invalid or expired verification token"
+}
+```
+
+### 3. Login User
+* **Method**: `POST`
+* **Path**: `/auth/login`
+* **Rate Limit**: 10 requests per 15 minutes per IP
+* **Request Body**:
+```json
+{
+  "email": "jane@example.com",
+  "password": "Str0ng!Pass"
+}
+```
+* **Success Response (200 OK)** — Returns both access and refresh tokens:
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "a1b2c3d4e5f6...",
+  "user": {
+    "id": "60d0fe4f5311236168a109a1",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "role": "student",
+    "isEmailVerified": true,
     "streak": { "count": 1 }
   }
 }
 ```
+* **Error Response (403)** — Email not verified:
+```json
+{
+  "success": false,
+  "error": "Please verify your email before logging in"
+}
+```
 
-### 3. Get Current User Profiles
+### 4. Refresh Token
+* **Method**: `POST`
+* **Path**: `/auth/refresh-token`
+* **Rate Limit**: 10 requests per 15 minutes per IP
+* **Request Body**:
+```json
+{
+  "refreshToken": "a1b2c3d4e5f6..."
+}
+```
+* **Success Response (200 OK)** — Old refresh token is invalidated (rotation):
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "f6e5d4c3b2a1..."
+}
+```
+
+### 5. Forgot Password
+* **Method**: `POST`
+* **Path**: `/auth/forgot-password`
+* **Rate Limit**: 5 requests per hour per IP
+* **Request Body**:
+```json
+{
+  "email": "jane@example.com"
+}
+```
+* **Success Response (200 OK)**:
+```json
+{
+  "success": true,
+  "message": "Password reset link sent to your email. Link expires in 1 hour."
+}
+```
+
+### 6. Reset Password
+* **Method**: `POST`
+* **Path**: `/auth/reset-password/:token`
+* **Rate Limit**: None (token-based, single-use)
+* **Request Body**:
+```json
+{
+  "password": "NewStr0ng!Pass"
+}
+```
+* **Success Response (200 OK)** — Password updated, all existing refresh tokens invalidated:
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "Password reset successful"
+}
+```
+
+### 7. Get Current User Profile
 * **Method**: `GET`
 * **Path**: `/auth/me`
 * **Headers**: `Authorization: Bearer <token>`
@@ -75,6 +171,7 @@ This document catalogs the REST API endpoints available in the **OpenPrep AI** b
     "name": "Jane Doe",
     "email": "jane@example.com",
     "role": "student",
+    "isEmailVerified": true,
     "streak": { "count": 1 }
   }
 }

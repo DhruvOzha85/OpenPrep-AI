@@ -19,10 +19,29 @@ This document outlines the security architecture, data validation flows, and pol
   password: {
     type: String,
     required: [true, 'Please add a password'],
-    minlength: 6,
+    minlength: 8,
     select: false
   }
   ```
+* **Complexity Requirements**: Passwords must contain at least one uppercase letter, one lowercase letter, one number, and one special character. Validated on both register and reset-password endpoints via `express-validator`.
+
+### 3. Email Verification
+* New accounts are created with `isEmailVerified: false`.
+* Login returns `403 Forbidden` if email is not verified.
+* Verification tokens are generated via `crypto.randomBytes(32)` and stored as SHA-256 hashes.
+* Token expires after 24 hours.
+
+### 4. Forgot / Reset Password
+* Reset tokens are generated via `crypto.randomBytes(32)` and stored as SHA-256 hashes.
+* Token expires after 1 hour.
+* Successful password reset invalidates all existing refresh tokens (logout from all devices).
+
+### 5. Refresh Token Security
+* Refresh tokens are 64-character cryptographically random hex strings.
+* Stored as SHA-256 hashes in the User document's `refreshTokens` array.
+* **Rotation**: Each use invalidates the old token and issues a new pair.
+* Support for **multi-device login** via the tokens array. 
+* Expires after 7 days.
 
 ---
 
@@ -33,10 +52,12 @@ This document outlines the security architecture, data validation flows, and pol
 * No hardcoded fallback secrets exist in the source code. All token signing and verification uses `process.env.JWT_SECRET` exclusively.
 
 ### 2. Rate Limiting
-* Authentication endpoints (`/api/auth/login`, `/api/auth/register`, `/api/auth/forgot-password`) are protected with `express-rate-limit`.
-* **Login**: 5 attempts per 15 minutes per IP.
-* **Register**: 3 attempts per hour per IP.
-* **Forgot Password**: 3 attempts per hour per IP.
+* Authentication endpoints (`/api/auth/login`, `/api/auth/register`, `/api/auth/forgot-password`, `/api/auth/refresh-token`, `/api/auth/verify-email/:token`) are protected with `express-rate-limit`.
+* **Login**: 10 attempts per 15 minutes per IP.
+* **Register**: 5 attempts per hour per IP.
+* **Forgot Password**: 5 attempts per hour per IP.
+* **Refresh Token**: 10 attempts per 15 minutes per IP.
+* **Verify Email**: 5 attempts per hour per IP.
 * Rate limiting is automatically disabled in test environments.
 
 ### 3. Security Headers (Helmet)
@@ -61,11 +82,11 @@ This document outlines the security architecture, data validation flows, and pol
 * All user inputs are parameterized via **Mongoose Schemas**.
 * Input payloads are validated to block NoSQL query operator injection (e.g., preventing inputs containing `{ "$gt": "" }`).
 
-### 2. Cross-Site Scripting (XSS) Mitigation
+### 8. Cross-Site Scripting (XSS) Mitigation
 * The frontend React components escape rendered variables by default.
 * Content Security Policy (CSP) headers are configured on production servers to prevent inline script execution.
 
-### 3. API Key Protection
+### 9. API Key Protection
 * **Gemini API Key**: The Google Gemini API key is loaded into memory using `process.env.GEMINI_API_KEY` and is never exposed to client browsers. All LLM operations are handled securely on the Node.js backend.
 
 ---

@@ -30,7 +30,11 @@ const validateRegister = [
     .normalizeEmail(),
   body('password')
     .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/).withMessage('Password must contain at least one number')
+    .matches(/[^A-Za-z0-9]/).withMessage('Password must contain at least one special character'),
   handleValidationErrors,
 ];
 
@@ -42,6 +46,23 @@ const validateLogin = [
 
 const validateForgotPassword = [
   body('email').trim().isEmail().withMessage('Please provide a valid email'),
+  handleValidationErrors,
+];
+
+const validateResetPassword = [
+  body('password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/).withMessage('Password must contain at least one number')
+    .matches(/[^A-Za-z0-9]/).withMessage('Password must contain at least one special character'),
+  handleValidationErrors,
+];
+
+const validateRefreshToken = [
+  body('refreshToken')
+    .notEmpty().withMessage('Refresh token is required'),
   handleValidationErrors,
 ];
 
@@ -201,6 +222,8 @@ module.exports = {
   validateRegister,
   validateLogin,
   validateForgotPassword,
+  validateResetPassword,
+  validateRefreshToken,
   // Academic
   validateCreateExam,
   validateCreateSubject,
