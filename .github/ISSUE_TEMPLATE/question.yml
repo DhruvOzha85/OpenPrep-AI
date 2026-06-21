@@ -7,6 +7,23 @@ body:
     attributes:
       value: |
         Before submitting, check the README, contributing guidelines, and existing discussions!
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: Affected Areas
+      description: Select one or more areas that this question relates to.
+      options:
+        - label: Frontend
+        - label: Backend
+        - label: Database
+        - label: AI
+        - label: Authentication
+        - label: PYQ Analysis
+        - label: Study Planner
+        - label: Dashboard
+        - label: UI/UX
+    validations:
+      required: true
   - type: textarea
     id: query
     attributes:
