@@ -1,67 +1,152 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../services/emailService');
 
-// Helper to generate token
-const generateToken = (id) => {
+// ---------------------------------------------------------------------------
+// Token helpers
+// ---------------------------------------------------------------------------
+
+// Generate access token (15 min expiry)
+const generateAccessToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: '15m',
   });
 };
 
+// Generate refresh token (7 day expiry) — stores hashed version in DB
+const generateRefreshToken = async (userId) => {
+  const rawToken = crypto.randomBytes(40).toString('hex');
+  const hashed = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+  const user = await User.findById(userId);
+  if (!user) throw new Error('User not found');
+
+  user.refreshTokens.push(hashed);
+  user.refreshTokenExpire = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+  await user.save();
+
+  return rawToken;
+};
+
+// ---------------------------------------------------------------------------
+// Send verification email
+// ---------------------------------------------------------------------------
+const sendVerificationEmail = async (user, req) => {
+  const verificationToken = user.generateToken('emailVerification');
+  await user.save({ validateBeforeSave: false });
+
+  const verifyUrl = `${req.protocol}://${req.get('host')}/api/auth/verify-email/${verificationToken}`;
+
+  await sendEmail({
+    to: user.email,
+    subject: 'Email Verification — OpenPrep AI',
+    text: `Please verify your email by clicking the link: ${verifyUrl}\n\nThis link expires in 24 hours.`,
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Send password reset email
+// ---------------------------------------------------------------------------
+const sendPasswordResetEmail = async (user, req) => {
+  const resetToken = user.generateToken('resetPassword');
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
+
+  await sendEmail({
+    to: user.email,
+    subject: 'Password Reset — OpenPrep AI',
+    text: `Reset your password by clicking the link: ${resetUrl}\n\nThis link expires in 1 hour. If you did not request this, please ignore this email.`,
+  });
+};
+
+// ---------------------------------------------------------------------------
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
+// ---------------------------------------------------------------------------
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: role || 'student',
-    });
+    const user = await User.create({ name, email, password, role: role || 'student' });
 
-    const token = generateToken(user._id, user.role);
+    // Send verification email (logs to console if SMTP not configured)
+    await sendVerificationEmail(user, req);
 
     res.status(201).json({
       success: true,
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        streak: user.streak,
-        studyHours: user.studyHours,
-      },
+      message: 'Registration successful. Please verify your email to activate your account.',
+      isEmailVerified: false,
     });
   } catch (error) {
     next(error);
   }
 };
 
+// ---------------------------------------------------------------------------
+// @desc    Verify email
+// @route   POST /api/auth/verify-email/:token
+// @access  Public
+// ---------------------------------------------------------------------------
+exports.verifyEmail = async (req, res, next) => {
+  try {
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired verification token' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    await user.save();
+
+    const accessToken = generateAccessToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Email verified successfully. You can now log in.',
+      token: accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ---------------------------------------------------------------------------
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
+// ---------------------------------------------------------------------------
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Check for user
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Check password
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Please verify your email before logging in. Check your inbox for the verification link.',
+      });
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -84,11 +169,13 @@ exports.login = async (req, res, next) => {
     user.streak.lastActive = Date.now();
     await user.save();
 
-    const token = generateToken(user._id, user.role);
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
 
     res.status(200).json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -96,6 +183,7 @@ exports.login = async (req, res, next) => {
         role: user.role,
         streak: user.streak,
         studyHours: user.studyHours,
+        isEmailVerified: user.isEmailVerified,
       },
     });
   } catch (error) {
@@ -103,9 +191,11 @@ exports.login = async (req, res, next) => {
   }
 };
 
+// ---------------------------------------------------------------------------
 // @desc    Get current user profile
 // @route   GET /api/auth/me
 // @access  Private
+// ---------------------------------------------------------------------------
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -118,6 +208,7 @@ exports.getMe = async (req, res, next) => {
         role: user.role,
         streak: user.streak,
         studyHours: user.studyHours,
+        isEmailVerified: user.isEmailVerified,
       },
     });
   } catch (error) {
@@ -125,9 +216,11 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
+// ---------------------------------------------------------------------------
 // @desc    Forgot Password
 // @route   POST /api/auth/forgot-password
 // @access  Public
+// ---------------------------------------------------------------------------
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -137,10 +230,93 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'User not found with this email' });
     }
 
-    // Mock reset token
+    await sendPasswordResetEmail(user, req);
+
     res.status(200).json({
       success: true,
-      data: 'Password reset link sent to registered email. For demo purposes: Please use standard reset flows.',
+      message: 'Password reset link sent to your email. It expires in 1 hour.',
+    });
+  } catch (error) {
+    // If email sending failed, clear the token from DB
+    const user = await User.findOne({ email: req.body.email });
+    if (user) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
+    next(error);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// @desc    Reset Password
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+// ---------------------------------------------------------------------------
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+    }
+
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    // Invalidate all existing refresh tokens on password reset
+    user.refreshTokens = [];
+    await user.save();
+
+    const accessToken = generateAccessToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successful. You can now log in with your new password.',
+      token: accessToken,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh-token
+// @access  Public
+// ---------------------------------------------------------------------------
+exports.refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken: rawToken } = req.body;
+    const hashed = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    // Find user who has this hashed refresh token
+    const user = await User.findOne({
+      refreshTokens: hashed,
+      refreshTokenExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired refresh token' });
+    }
+
+    // Remove old token (rotation)
+    user.refreshTokens = user.refreshTokens.filter((t) => t !== hashed);
+
+    // Generate new pair
+    const accessToken = generateAccessToken(user._id);
+    const newRefreshToken = await generateRefreshToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      token: accessToken,
+      refreshToken: newRefreshToken,
     });
   } catch (error) {
     next(error);

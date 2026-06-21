@@ -1,8 +1,22 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { register, login, getMe, forgotPassword } = require('../controllers/authController');
+const {
+  register,
+  login,
+  getMe,
+  forgotPassword,
+  verifyEmail,
+  resetPassword,
+  refreshToken,
+} = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
-const { validateRegister, validateLogin, validateForgotPassword } = require('../middleware/validators');
+const {
+  validateRegister,
+  validateLogin,
+  validateForgotPassword,
+  validateResetPassword,
+  validateRefreshToken,
+} = require('../middleware/validators');
 
 const router = express.Router();
 
@@ -14,10 +28,7 @@ const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   skip: shouldSkip,
-  message: {
-    success: false,
-    error: 'Too many login attempts. Please try again after 15 minutes.',
-  },
+  message: { success: false, error: 'Too many login attempts. Please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -27,10 +38,7 @@ const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
   skip: shouldSkip,
-  message: {
-    success: false,
-    error: 'Too many registration attempts. Please try again after an hour.',
-  },
+  message: { success: false, error: 'Too many registration attempts. Please try again after an hour.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -40,10 +48,17 @@ const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
   skip: shouldSkip,
-  message: {
-    success: false,
-    error: 'Too many password reset requests. Please try again after an hour.',
-  },
+  message: { success: false, error: 'Too many password reset requests. Please try again after an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Refresh token rate limiter: 10 attempts per 15 minutes per IP
+const refreshTokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skip: shouldSkip,
+  message: { success: false, error: 'Too many refresh requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -51,6 +66,9 @@ const forgotPasswordLimiter = rateLimit({
 router.post('/register', registerLimiter, validateRegister, register);
 router.post('/login', loginLimiter, validateLogin, login);
 router.post('/forgot-password', forgotPasswordLimiter, validateForgotPassword, forgotPassword);
+router.post('/reset-password/:token', validateResetPassword, resetPassword);
+router.post('/verify-email/:token', verifyEmail);
+router.post('/refresh-token', refreshTokenLimiter, validateRefreshToken, refreshToken);
 router.get('/me', protect, getMe);
 
 module.exports = router;
