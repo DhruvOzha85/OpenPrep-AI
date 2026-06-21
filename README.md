@@ -1,348 +1,143 @@
 # 🚀 OpenPrep AI
 
-> AI-Powered Exam Preparation Platform for Students
+<div align="center">
 
-OpenPrep AI helps students prepare smarter by transforming notes, PDFs, and previous year question papers into actionable insights, quizzes, study plans, and revision strategies.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-yellow)](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/CONTRIBUTING.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/CODE_OF_CONDUCT.md)
+[![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-2026-orange.svg)](https://hacktoberfest.com/)
+[![GSSoC](https://img.shields.io/badge/GSSoC-2026-blue.svg)](https://gssoc.girlscript.tech/)
 
-Built for students, by students.
+**OpenPrep AI** is an advanced AI-powered exam preparation platform designed to help students optimize their study habits, analyze previous exam papers, identify knowledge gaps, and study smarter.
+
+[Explore Architecture](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/docs/architecture.md) • [Getting Started](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/docs/setup-guide.md) • [Contribution Guidelines](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/CONTRIBUTING.md) • [API Documentation](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/docs/api-reference.md)
+
+</div>
 
 ---
 
 ## 🎯 Problem Statement
 
-Most students spend hours figuring out:
+Most students waste critical preparation hours trying to figure out:
+* What chapters hold the highest exam weightage?
+* Which questions are repeatedly asked?
+* How to schedule daily study topics effectively?
+* Where their weak points lie?
 
-* What topics are important?
-* Which chapters should be prioritized?
-* How should they plan revision?
-* What are their weak areas?
-* Which questions are repeatedly asked in exams?
-
-OpenPrep AI solves these problems using Artificial Intelligence and data-driven analysis.
+**OpenPrep AI** resolves these frustrations by utilizing advanced LLMs (Gemini API) and data-driven learning strategies (spaced repetition, adaptive planning) to structure their preparation path automatically.
 
 ---
 
-# ✨ Features
+## ✨ Features
 
-## 📄 PDF & Notes Analysis
-
-Upload:
-
-* Lecture Notes
-* Study Material
-* PDFs
-* Handwritten Notes (Upcoming)
-
-Generate:
-
-* Summaries
-* Important Points
-* Flashcards
-* Revision Notes
+* **📄 PDF & Notes Analysis**: Extract core themes, chapter summaries, and revision points from academic uploads.
+* **📊 PYQ Intelligence**: Parse Previous Year Question Papers (PYQs) to map chapter weightage, extract repeated questions, and detect trends.
+* **🧠 AI Quiz Generator**: Dynamically generate MCQ assessments based on custom uploaded notes or specific syllabus topics.
+* **📅 Smart Study Planner**: Input your exam date, syllabus scope, and study hours to generate a customized, calendarized study schedule.
+* **🎯 Weakness Detection**: Tracks performance across quiz attempts to dynamically highlight weak subjects and adapt study goals.
+* **📚 Spaced Repetition Flashcards**: Memorize complex concepts using flashcards backed by the SuperMemo SM-2 adaptation algorithm.
 
 ---
 
-## 🧠 AI Quiz Generator
+## 🛠️ Tech Stack
 
-Create quizzes automatically from:
-
-* PDFs
-* Notes
-* Text Input
-
-Features:
-
-* MCQs
-* True/False Questions
-* Short Answer Questions
-* Difficulty Levels
+| Component | Technologies Used |
+| --- | --- |
+| **Frontend** | React, Vite, Tailwind CSS, Redux Toolkit, React Router |
+| **Backend** | Node.js, Express.js, JWT Authentication |
+| **Database** | MongoDB, Mongoose ORM |
+| **AI Integration** | Gemini API (`gemini-1.5-flash`) |
+| **DevOps & CI** | Docker, Docker Compose, GitHub Actions |
 
 ---
 
-## 📊 PYQ Intelligence
-
-Analyze Previous Year Question Papers.
-
-### Insights Generated
-
-* Frequently Asked Topics
-* Chapter Weightage
-* Unit-wise Analysis
-* Repeated Questions
-* Important Concepts
-* Exam Trend Analysis
-
-Study smarter instead of studying everything.
-
----
-
-## 📅 Smart Study Planner
-
-Generate personalized study plans using:
-
-* Exam Dates
-* Syllabus
-* Available Study Hours
-
-Get:
-
-* Daily Schedule
-* Revision Plans
-* Priority Topics
-* Progress Tracking
-
----
-
-## 🎯 Weakness Detection
-
-After completing quizzes:
-
-OpenPrep AI identifies:
-
-* Strong Topics
-* Weak Topics
-* Accuracy Trends
-* Revision Suggestions
-
----
-
-## 🏆 Study Battles (Upcoming)
-
-Compete with friends through:
-
-* Quiz Rooms
-* Leaderboards
-* Weekly Challenges
-* Study Streaks
-
-Learning becomes fun and competitive.
-
----
-
-## 📚 Community Resource Hub (Upcoming)
-
-Students can contribute:
-
-* Notes
-* Flashcards
-* Question Banks
-* Cheat Sheets
-* Study Resources
-
----
-
-# 🛠 Tech Stack
-
-### Frontend
-
-* React.js
-* Tailwind CSS
-* React Router
-* Redux Toolkit
-
-### Backend
-
-* Node.js
-* Express.js
-
-### Database
-
-* MongoDB
-
-### AI
-
-* Gemini API / OpenAI API
-
-### Authentication
-
-* JWT
-* OAuth (Upcoming)
-
-### Deployment
-
-* Docker
-* Vercel
-* Render
-
----
-
-# 📂 Project Structure
+## 📂 Project Structure
 
 ```bash
 OpenPrep-AI/
-│
-├── client/
-│   ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-│
-├── server/
-│   ├── controllers/
-│   ├── routes/
-│   ├── middleware/
-│   ├── models/
-│   └── services/
-│
-├── docs/
-├── assets/
-└── README.md
+├── .github/             # GitHub actions, templates & labelers
+├── backend/             # Node.js + Express backend
+│   ├── config/          # MongoDB configuration
+│   ├── controllers/     # MVC controller logic
+│   ├── middleware/      # Auth, upload, and validation middleware
+│   ├── models/          # Mongoose database schemas
+│   ├── routes/          # Express API route declarations
+│   └── services/        # Gemini API integration service
+├── docs/                # Comprehensive system documentation
+└── frontend/            # React + Vite + Tailwind CSS frontend
+    ├── public/          # Static files and assets
+    └── src/
+        ├── components/  # Reusable UI components
+        ├── context/     # Global contexts (Theme, etc.)
+        ├── services/    # Axios API client integrations
+        └── store/       # Redux Toolkit global state store
 ```
 
 ---
 
-# 🚦 Getting Started
+## 🚦 Getting Started
 
-## Clone Repository
+For a step-by-step setup guide with environment variable details, review the [Setup Guide](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/docs/setup-guide.md).
 
+### Quick Launch with Docker
+If you have Docker installed, you can spin up the frontend, backend, and MongoDB instances with a single command:
 ```bash
-git clone https://github.com/yourusername/openprep-ai.git
+docker-compose up --build
 ```
+The React frontend will be available at `http://localhost:5173` and the Express API at `http://localhost:5000`.
 
-```bash
-cd openprep-ai
-```
+### Manual Local Launch
 
----
-
-## Install Dependencies
-
-### Frontend
-
-```bash
-cd client
-npm install
-```
-
-### Backend
-
-```bash
-cd server
-npm install
-```
-
----
-
-## Environment Variables
-
-Create a `.env` file:
-
-```env
-PORT=5000
-
-MONGO_URI=your_mongodb_connection
-
-JWT_SECRET=your_secret_key
-
-GEMINI_API_KEY=your_api_key
-```
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/yourusername/OpenPrep-AI.git
+   cd OpenPrep-AI
+   ```
+2. **Setup Backend**:
+   ```bash
+   cd backend
+   npm install
+   # Create a .env file based on .env.example
+   npm run dev
+   ```
+3. **Setup Frontend**:
+   ```bash
+   cd ../frontend
+   npm install
+   npm run dev
+   ```
 
 ---
 
-## Run Development Server
+## 🗺️ Roadmap
+* **v1.0**: Core authentication, AI study planners, quiz generators, and analytics dashboards.
+* **v1.5**: Spaced repetition engine, PYQ PDF parser, and attempt history trends.
+* **v2.0**: Weakness-adapted scheduling, community note pools, and OCR processing.
+* **v3.0**: Live study battles, AI chat mentors, and React Native mobile client.
 
-Backend
-
-```bash
-npm run dev
-```
-
-Frontend
-
-```bash
-npm start
-```
+For the comprehensive technical roadmap, review [docs/project-roadmap.md](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/docs/project-roadmap.md).
 
 ---
 
-# 🗺 Roadmap
+## 🤝 Contributing
 
-## Version 1.0
+We welcome contributions of all levels! Please check the [Contributing Guide](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/CONTRIBUTING.md) to understand how to fork the project, set up formatting rules, and make your first Pull Request.
 
-* [ ] Authentication
-* [ ] PDF Upload
-* [ ] Quiz Generator
-* [ ] Study Planner
-* [ ] Dashboard
-
-## Version 2.0
-
-* [ ] PYQ Intelligence
-* [ ] Flashcards
-* [ ] Progress Analytics
-* [ ] Revision Planner
-
-## Version 3.0
-
-* [ ] Study Battles
-* [ ] Community Notes
-* [ ] AI Mentor
-* [ ] Mobile App
+Please also adhere to the community standards in our [Code of Conduct](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/CODE_OF_CONDUCT.md).
 
 ---
 
-# 🤝 Contributing
+## 📜 License
 
-We welcome contributions from developers, students, designers, and AI enthusiasts.
-
-### Ways to Contribute
-
-* Fix bugs
-* Improve UI/UX
-* Add AI features
-* Improve documentation
-* Add study resources
-* Build new integrations
-
-### Contribution Steps
-
-```bash
-Fork Repository
-↓
-Create Branch
-↓
-Make Changes
-↓
-Commit Changes
-↓
-Open Pull Request
-```
+This project is licensed under the MIT License. See [LICENSE](file:///c:/Users/Nishit/OneDrive/Desktop/ALL%20Projects/OPENPREP%20AI/OpenPrep-AI/LICENSE) for more details.
 
 ---
 
-# 🌟 Why OpenPrep AI?
+## ❤️ Support
 
-Because students don't need more content.
+If you love this project, show your support:
+* ⭐ **Star** our repository on GitHub.
+* 🍴 **Fork** it to start contributing.
+* 📢 **Share** it with your classmates and peers!
 
-They need:
-
-* Better planning
-* Better prioritization
-* Better revision
-* Better insights
-
-OpenPrep AI helps students prepare smarter, not harder.
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-# ❤️ Support
-
-If you like this project:
-
-⭐ Star the repository
-
-🍴 Fork the repository
-
-🤝 Contribute to the project
-
-📢 Share it with other students
-
----
-
-## Built With ❤️ For Students Worldwide
+*Built with ❤️ for students worldwide.*
