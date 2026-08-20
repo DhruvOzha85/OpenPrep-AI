@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, MessageSquare, Send, LogOut, Code, Copy, Check, Info, RefreshCw, AlertCircle
+  Users, MessageSquare, Send, LogOut, Code, Copy, Check, Info, RefreshCw, AlertCircle, Mic
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -11,6 +11,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { socket } from '../services/socket';
 import LeatherBoard from '../components/dashboard/LeatherBoard';
 import VintagePaper from '../components/dashboard/VintagePaper';
+import VoiceNoteRecorderModal from '../components/notes/VoiceNoteRecorderModal';
 
 const StudyGroupChat = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const StudyGroupChat = () => {
   // UI States
   const [copied, setCopied] = useState(false);
   const [typingUsers, setTypingUsers] = useState({});
+  const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const stopTypingTimerRef = useRef(null);
   const typingClearTimersRef = useRef({});
@@ -115,6 +117,12 @@ const StudyGroupChat = () => {
       socket.emit('send_chat_message', { roomId, messageText: inputText });
       socket.emit('user:typing', { roomId, isTyping: false });
       setInputText('');
+    }
+  };
+
+  const handleSaveVoiceNote = (transcript) => {
+    if (transcript.trim()) {
+      socket.emit('send_chat_message', { roomId, messageText: `*Voice Note:*\n${transcript}` });
     }
   };
 
@@ -378,6 +386,14 @@ const StudyGroupChat = () => {
                           <Code className="w-3.5 h-3.5" />
                           Code Block
                         </button>
+                        <button
+                          onClick={() => setIsVoiceRecorderOpen(true)}
+                          className="px-2.5 py-1 text-xs bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-sm font-semibold flex items-center gap-1 transition-colors ml-2"
+                          title="Record Voice Note"
+                        >
+                          <Mic className="w-3.5 h-3.5" />
+                          Voice Note
+                        </button>
                       </div>
                       <div className="text-[10px] text-neutral-400 font-serif italic flex items-center gap-1">
                         <Info className="w-3 h-3" />
@@ -430,6 +446,11 @@ const StudyGroupChat = () => {
           </AnimatePresence>
         </div>
       </div>
+      <VoiceNoteRecorderModal 
+        isOpen={isVoiceRecorderOpen} 
+        onClose={() => setIsVoiceRecorderOpen(false)} 
+        onSave={handleSaveVoiceNote} 
+      />
     </LeatherBoard>
   );
 };
