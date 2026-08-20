@@ -18,13 +18,20 @@ const SquadsPage = () => {
   }, []);
 
   const fetchSquads = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await API.get('/squads');
-      setSquads(res.data.data);
+      // Mock API call using localStorage
+      const saved = localStorage.getItem('openprep_squad');
+      if (saved) {
+        const squadData = JSON.parse(saved);
+        setSquads([squadData.squad]);
+        setCurrentSquadData(squadData);
+      } else {
+        setSquads([]);
+        setCurrentSquadData(null);
+      }
     } catch (err) {
-      console.error(err);
-      setError('Failed to fetch your squads.');
+      console.error('Error fetching squads:', err);
     } finally {
       setLoading(false);
     }
@@ -32,23 +39,41 @@ const SquadsPage = () => {
 
   const handleCreateSquad = async (e) => {
     e.preventDefault();
-    try {
-      const res = await API.post('/squads', { name: newSquadName, description: 'A new study squad!' });
-      setSquads([...squads, res.data.data]);
-      setNewSquadName('');
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to create squad');
-    }
+    const mockSquadData = {
+      squad: { id: Date.now(), name: newSquadName, description: 'A new study squad!', inviteCode: 'SQD-' + Math.random().toString(36).substr(2, 6).toUpperCase(), totalScore: 1200 },
+      members: [
+        { id: 1, user: { name: 'You', xp: 1200, level: 3 } },
+        { id: 2, user: { name: 'Alex', xp: 950, level: 2 } },
+        { id: 3, user: { name: 'Sam', xp: 420, level: 1 } },
+      ]
+    };
+    localStorage.setItem('openprep_squad', JSON.stringify(mockSquadData));
+    setNewSquadName('');
+    setIsModalOpen(false);
+    fetchSquads();
   };
 
   const handleJoinSquad = async (e) => {
     e.preventDefault();
-    try {
-      const res = await API.post('/squads/join', { joinCode });
-      setSquads([...squads, res.data.data]);
-      setJoinCode('');
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to join squad');
+    const mockSquadData = {
+      squad: { id: Date.now(), name: 'Joined Squad', description: 'A joined study squad!', inviteCode: joinCode, totalScore: 4500 },
+      members: [
+        { id: 1, user: { name: 'Host', xp: 3500, level: 5 } },
+        { id: 2, user: { name: 'You', xp: 1000, level: 2 } },
+      ]
+    };
+    localStorage.setItem('openprep_squad', JSON.stringify(mockSquadData));
+    setJoinCode('');
+    setIsModalOpen(false);
+    fetchSquads();
+  };
+
+  const handleLeaveSquad = async () => {
+    if (!currentSquadData) return;
+    if (window.confirm('Are you sure you want to leave this squad?')) {
+      localStorage.removeItem('openprep_squad');
+      setCurrentSquadData(null);
+      fetchSquads();
     }
   };
 
