@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import CustomCursor from './components/CustomCursor';
 import ScrollToTop from './components/ScrollToTop';
-import MobileNavDrawer from './components/MobileNavDrawer';
+import MobileBottomSheet from './components/common/MobileBottomSheet';
 import PageSkeleton from './components/PageSkeleton';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 import QuotaExceededModal from './components/dashboard/QuotaExceededModal';
@@ -109,7 +109,7 @@ function App() {
       )}
       <CustomCursor />
       <ScrollToTop />
-      <MobileNavDrawer />
+      <MobileBottomSheet />
       <QuotaExceededModal />
       <Suspense fallback={<PageSkeleton />}>
         <Routes>
