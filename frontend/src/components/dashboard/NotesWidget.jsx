@@ -11,7 +11,9 @@ import {
   Mic,
   Play,
   Pause,
+  Edit3
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import VintagePaper from './VintagePaper';
 import AudioReader from '../AudioReader';
@@ -110,6 +112,12 @@ const NotesWidget = ({ limit = 5 }) => {
   const [activeSentenceByNote, setActiveSentenceByNote] = useState({});
   const [flashcardNote, setFlashcardNote] = useState(null);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCreateCollabNote = () => {
+    const randomId = Math.random().toString(36).substring(2, 9);
+    navigate(`/collab-note/${randomId}`);
+  };
 
   const loadNotes = useCallback(async () => {
     setLoading(true);
@@ -162,6 +170,13 @@ const NotesWidget = ({ limit = 5 }) => {
           <FileText className="w-6 h-6 text-yellow-700" /> AI Revision Summaries
         </span>
 <span className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCreateCollabNote}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-sm shadow-sm transition-all"
+          >
+            <Edit3 className="w-3.5 h-3.5" /> Collab Note
+          </button>
           <button
             type="button"
             onClick={() => setIsRecordModalOpen(true)}
